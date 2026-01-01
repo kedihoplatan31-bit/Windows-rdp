@@ -1,0 +1,32 @@
+name: Stable Windows RDP (99999h)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rdp:
+    runs-on: windows-latest
+    timeout-minutes: 99999
+
+    steps:
+    - name: Create RDP User
+      run: |
+        net user rdpuser P@ssw0rd123! /add
+        net localgroup administrators rdpuser /add
+
+    - name: Enable RDP
+      run: |
+        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+        netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
+
+    - name: Disable Sleep
+      run: |
+        powercfg /change standby-timeout-ac 0
+
+    - name: Download Cloudflared
+      run: |
+        curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -o cloudflared.exe
+
+    - name: Start RDP Tunnel
+      run: |
+        cloudflared.exe tunnel --url rdp://localhost:3389
