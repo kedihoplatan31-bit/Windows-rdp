@@ -6,26 +6,20 @@ on:
 jobs:
   rdp:
     runs-on: windows-latest
-    timeout-minutes: 999999
+    timeout-minutes: 360
 
     steps:
-    - name: Create RDP User
-      run: |
-        net user rdpuser P@ssw0rd123! /add
-        net localgroup administrators rdpuser /add
+      - name: Enable RDP
+        run: |
+          net user runneradmin P@ssw0rd123 /add
+          net localgroup administrators runneradmin /add
+          reg add "HKLM\System\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-    - name: Enable RDP
-      run: |
-        reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
-        netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
-
-    - name: Download Cloudflared
-      run: |
-        curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -o cloudflared.exe
-
-    - name: Start RDP Tunnel (KEEP ALIVE)
-      shell: powershell
-      run: |
-        Write-Host "Starting Cloudflared RDP tunnel..."
-        Start-Process -NoNewWindow -FilePath .\cloudflared.exe -ArgumentList "tunnel --no-autoupdate --url rdp://localhost:3389"
-        while ($true) { Start-Sleep -Seconds 60 }
+      - name: Show RDP Info
+        run: |
+          echo "=============================="
+          echo "RDP READY"
+          echo "USER: runneradmin"
+          echo "PASS: P@ssw0rd123"
+          echo "
