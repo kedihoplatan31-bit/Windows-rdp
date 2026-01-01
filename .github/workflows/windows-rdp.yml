@@ -1,4 +1,4 @@
-name: Stable Windows RDP (99999h)
+name: Stable Windows RDP (6h)
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
 jobs:
   rdp:
     runs-on: windows-latest
-    timeout-minutes: 99999
+    timeout-minutes: 999999
 
     steps:
     - name: Create RDP User
@@ -19,14 +19,13 @@ jobs:
         reg add "HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
         netsh advfirewall firewall set rule group="remote desktop" new enable=Yes
 
-    - name: Disable Sleep
-      run: |
-        powercfg /change standby-timeout-ac 0
-
     - name: Download Cloudflared
       run: |
         curl -L https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -o cloudflared.exe
 
-    - name: Start RDP Tunnel
+    - name: Start RDP Tunnel (KEEP ALIVE)
+      shell: powershell
       run: |
-        cloudflared.exe tunnel --url rdp://localhost:3389
+        Write-Host "Starting Cloudflared RDP tunnel..."
+        Start-Process -NoNewWindow -FilePath .\cloudflared.exe -ArgumentList "tunnel --no-autoupdate --url rdp://localhost:3389"
+        while ($true) { Start-Sleep -Seconds 60 }
