@@ -10,16 +10,25 @@ jobs:
 
     steps:
       - name: Enable RDP
+        shell: powershell
         run: |
-          net user runneradmin P@ssw0rd123 /add
+          net user runneradmin P@ssw0rd123
           net localgroup administrators runneradmin /add
-          reg add "HKLM\System\CurrentControlSet\Control\Terminal Server" /v fDenyTSConnections /t REG_DWORD /d 0 /f
+          Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name fDenyTSConnections -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
       - name: Show RDP Info
+        shell: powershell
         run: |
-          echo "=============================="
-          echo "RDP READY"
-          echo "USER: runneradmin"
-          echo "PASS: P@ssw0rd123"
-          echo "
+          Write-Host "======================="
+          Write-Host "RDP READY"
+          Write-Host "USER: runneradmin"
+          Write-Host "PASS: P@ssw0rd123"
+          Write-Host "IP:"
+          ipconfig
+          Write-Host "======================="
+
+      - name: Keep Alive (6 hours)
+        shell: powershell
+        run: |
+          Start-Sleep -Seconds 21600
