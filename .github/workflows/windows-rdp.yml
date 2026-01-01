@@ -1,34 +1,31 @@
-name: Stable Windows RDP (6h)
+name: Linux GUI noVNC
 
 on:
   workflow_dispatch:
 
 jobs:
-  rdp:
-    runs-on: windows-latest
+  gui:
+    runs-on: ubuntu-latest
     timeout-minutes: 360
 
     steps:
-      - name: Enable RDP
-        shell: powershell
-        run: |
-          net user runneradmin P@ssw0rd123
-          net localgroup administrators runneradmin /add
-          Set-ItemProperty -Path "HKLM:\System\CurrentControlSet\Control\Terminal Server" -Name fDenyTSConnections -Value 0
-          Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+    - name: Install desktop & noVNC
+      run: |
+        sudo apt update
+        sudo apt install -y xfce4 xfce4-goodies tightvncserver novnc websockify
+        mkdir -p ~/.vnc
+        echo "123456" | vncpasswd -f > ~/.vnc/passwd
+        chmod 600 ~/.vnc/passwd
 
-      - name: Show RDP Info
-        shell: powershell
-        run: |
-          Write-Host "======================="
-          Write-Host "RDP READY"
-          Write-Host "USER: runneradmin"
-          Write-Host "PASS: P@ssw0rd123"
-          Write-Host "IP:"
-          ipconfig
-          Write-Host "======================="
+    - name: Start VNC
+      run: |
+        vncserver :1 -geometry 1280x720 -depth 24
 
-      - name: Keep Alive (6 hours)
-        shell: powershell
-        run: |
-          Start-Sleep -Seconds 21600
+    - name: Start noVNC
+      run: |
+        websockify --web=/usr/share/novnc/ 6080 localhost:5901 &
+
+    - name: Keep alive
+      run: |
+        echo "noVNC ready"
+        sleep 6h
