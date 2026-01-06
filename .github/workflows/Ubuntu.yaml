@@ -1,0 +1,51 @@
+name: Ubuntu NoMachine Tailscale
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Update system
+        run: |
+          sudo apt update
+
+      - name: Install desktop (XFCE)
+        run: |
+          sudo apt install -y xfce4 xfce4-goodies dbus-x11
+
+      - name: Install NoMachine
+        run: |
+          wget https://download.nomachine.com/download/8.11/Linux/nomachine_8.11.3_1_amd64.deb
+          sudo dpkg -i nomachine_8.11.3_1_amd64.deb || sudo apt -f install -y
+
+      - name: Start NoMachine
+        run: |
+          sudo systemctl enable nxserver
+          sudo systemctl start nxserver
+
+      - name: Create user
+        run: |
+          sudo useradd -m nxuser
+          echo "nxuser:123456" | sudo chpasswd
+          sudo usermod -aG sudo nxuser
+
+      - name: Install Tailscale
+        run: |
+          curl -fsSL https://tailscale.com/install.sh | sh
+
+      - name: Start Tailscale
+        run: |
+          sudo tailscale up \
+            --authkey=${{ secrets.TAILSCALE_AUTHKEY }} \
+            --hostname=github-ubuntu
+
+      - name: Show Tailscale IP
+        run: |
+          echo "Tailscale IP:"
+          tailscale ip -4
+
+      - name: Keep alive (6 hours)
+        run: sleep 21600
