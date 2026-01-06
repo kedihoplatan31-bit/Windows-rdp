@@ -1,4 +1,4 @@
-name: Ubuntu NoMachine Tailscale
+name: Ubuntu X2Go Tailscale
 
 on:
   workflow_dispatch:
@@ -16,23 +16,15 @@ jobs:
         run: |
           sudo apt install -y xfce4 xfce4-goodies dbus-x11
 
-      - name: Add NoMachine repository
+      - name: Install X2Go Server
         run: |
-          curl -fsSL https://download.nomachine.com/download/8.11/Linux/nomachine_8.11.3_1_amd64.deb -o /tmp/nx.deb || true
-
-      - name: Install NoMachine (OFFICIAL WAY)
-        run: |
-          sudo apt install -y nomachine
-
-      - name: Start NoMachine server
-        run: |
-          sudo /usr/NX/bin/nxserver --start
+          sudo apt install -y x2goserver x2goserver-xsession
 
       - name: Create user
         run: |
-          sudo useradd -m nxuser
-          echo "nxuser:123456" | sudo chpasswd
-          sudo usermod -aG sudo nxuser
+          sudo useradd -m x2gouser
+          echo "x2gouser:123456" | sudo chpasswd
+          sudo usermod -aG sudo x2gouser
 
       - name: Install Tailscale
         run: |
