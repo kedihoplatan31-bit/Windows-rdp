@@ -1,4 +1,4 @@
-name: macOS Tailscale VNC
+name: macOS Tailscale NoMachine
 
 on:
   workflow_dispatch:
@@ -19,21 +19,21 @@ jobs:
             --authkey=${{ secrets.TAILSCALE_AUTHKEY }} \
             --hostname=github-macos
 
-      - name: Enable Screen Sharing (VNC)
+      - name: Install NoMachine
         run: |
-          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
-          -activate -configure -access -on \
-          -restart -agent -privs -all
+          brew install --cask nomachine
 
-      - name: Create VNC User
+      - name: Enable NoMachine
         run: |
-          sudo sysadminctl -addUser vncuser -password 123456
-          sudo dseditgroup -o edit -a vncuser -t user admin
+          sudo /Applications/NoMachine.app/Contents/MacOS/nxserver --start
+
+      - name: Create User
+        run: |
+          sudo sysadminctl -addUser nxuser -password 123456
+          sudo dseditgroup -o edit -a nxuser -t user admin
 
       - name: Show Tailscale IP
-        run: |
-          echo "Tailscale IP:"
-          tailscale ip -4
+        run: tailscale ip -4
 
       - name: Keep Alive (6 saat)
         run: sleep 21600
