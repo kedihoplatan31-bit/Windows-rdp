@@ -1,10 +1,10 @@
-name: Ubuntu GUI noVNC + Tailscale
+name: Ubuntu NoMachine + Tailscale
 
 on:
   workflow_dispatch:
 
 jobs:
-  rdp:
+  nx:
     runs-on: ubuntu-latest
     timeout-minutes: 360
 
@@ -12,29 +12,23 @@ jobs:
     - name: Update system
       run: |
         sudo apt update
-        sudo apt install -y xfce4 xfce4-goodies tightvncserver novnc websockify curl
+        sudo apt install -y xfce4 xfce4-goodies curl
 
-    - name: Set VNC password
+    - name: Install NoMachine
       run: |
-        mkdir -p ~/.vnc
-        echo -e "123456\n123456\nn" | vncpasswd
-        cat > ~/.vnc/xstartup << 'EOF'
-        #!/bin/sh
-        unset SESSION_MANAGER
-        unset DBUS_SESSION_BUS_ADDRESS
-        exec startxfce4 &
-        EOF
-        chmod +x ~/.vnc/xstartup
+        wget https://download.nomachine.com/download/8.11/Linux/nomachine_8.11.3_1_amd64.deb
+        sudo dpkg -i nomachine_8.11.3_1_amd64.deb || sudo apt -f install -y
 
-    - name: Start VNC
+    - name: Create user
       run: |
-        vncserver -kill :1 || true
-        vncserver :1 -geometry 1280x720
+        sudo useradd -m user
+        echo "user:user" | sudo chpasswd
+        sudo usermod -aG sudo user
 
-    - name: Start noVNC
+    - name: Set desktop
       run: |
-        websockify --web=/usr/share/novnc/ 6080 localhost:5901 &
-        sleep 3
+        echo "exec startxfce4 &" | sudo tee /home/user/.xsession
+        sudo chown user:user /home/user/.xsession
 
     - name: Install Tailscale
       run: |
@@ -46,11 +40,11 @@ jobs:
         sleep 5
         sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }} --ssh=false
 
-    - name: Show access info
+    - name: Show connection info
       run: |
+        echo "NX USER: user"
+        echo "NX PASS: user"
+        echo "NX PORT: 4000"
         echo "TAILSCALE IP:"
         tailscale ip -4
-        echo ""
-        echo "TELEFONDAN GIRIS:"
-        echo "http://TAILSCALE_IP:6080"
         sleep infinity
