@@ -20,10 +20,15 @@ jobs:
         https://web9001.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_x86_64.tar.gz \
         -o nomachine.tar.gz
 
-    - name: Install NoMachine
+    - name: Extract NoMachine
       run: |
         tar -xzf nomachine.tar.gz
-        cd nomachine*
+        ls -l
+
+    - name: Install NoMachine
+      run: |
+        NXDIR=$(ls -d nomachine*)
+        cd "$NXDIR"
         sudo ./nxserver --install
 
     - name: Start NoMachine
@@ -40,9 +45,8 @@ jobs:
         sleep 5
         sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }}
 
-    - name: Show connection info
+    - name: Show info
       run: |
         echo "NoMachine Port: 4000"
-        echo "IP:"
         tailscale ip -4
         sleep infinity
