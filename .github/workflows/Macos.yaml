@@ -16,8 +16,8 @@ jobs:
       - name: Start Tailscale
         run: |
           sudo tailscale up \
-            --authkey ${{ secrets.TAILSCALE_AUTHKEY }} \
-            --hostname github-macos
+            --authkey=${{ secrets.TAILSCALE_AUTHKEY }} \
+            --hostname=github-macos
 
       - name: Enable Screen Sharing (VNC)
         run: |
