@@ -21,10 +21,9 @@ jobs:
           wget https://download.nomachine.com/download/8.11/Linux/nomachine_8.11.3_1_amd64.deb
           sudo dpkg -i nomachine_8.11.3_1_amd64.deb || sudo apt -f install -y
 
-      - name: Start NoMachine
+      - name: Start NoMachine server (DOĞRU YOL)
         run: |
-          sudo systemctl enable nxserver
-          sudo systemctl start nxserver
+          sudo /usr/NX/bin/nxserver --start
 
       - name: Create user
         run: |
