@@ -16,12 +16,15 @@ jobs:
         run: |
           sudo apt install -y xfce4 xfce4-goodies dbus-x11
 
-      - name: Install NoMachine
+      - name: Add NoMachine repository
         run: |
-          wget https://download.nomachine.com/download/8.11/Linux/nomachine_8.11.3_1_amd64.deb
-          sudo dpkg -i nomachine_8.11.3_1_amd64.deb || sudo apt -f install -y
+          curl -fsSL https://download.nomachine.com/download/8.11/Linux/nomachine_8.11.3_1_amd64.deb -o /tmp/nx.deb || true
 
-      - name: Start NoMachine server (DOĞRU YOL)
+      - name: Install NoMachine (OFFICIAL WAY)
+        run: |
+          sudo apt install -y nomachine
+
+      - name: Start NoMachine server
         run: |
           sudo /usr/NX/bin/nxserver --start
 
