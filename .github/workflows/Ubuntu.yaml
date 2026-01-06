@@ -1,65 +1,35 @@
-name: Ubuntu NoMachine + Tailscale
+name: Windows NoMachine RDP
 
 on:
   workflow_dispatch:
 
 jobs:
-  nx:
-    runs-on: ubuntu-latest
+  windows:
+    runs-on: windows-latest
     timeout-minutes: 360
 
     steps:
-    - name: Update system
+    - name: Disable Sleep
       run: |
-        sudo apt update
+        powercfg /change standby-timeout-ac 0
+        powercfg /change hibernate-timeout-ac 0
 
-    - name: Install desktop (XFCE)
+    - name: Download NoMachine
       run: |
-        sudo DEBIAN_FRONTEND=noninteractive apt install -y \
-          xfce4 xfce4-goodies dbus-x11 x11-xserver-utils
+        curl -L -o nomachine.exe https://download.nomachine.com/download/8.11/Windows/nomachine_8.11.3_4_x64.exe
 
-    - name: Download NoMachine TAR.GZ
+    - name: Install NoMachine
       run: |
-        curl -L -A "Mozilla/5.0" \
-        https://web9001.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_x86_64.tar.gz \
-        -o /tmp/nomachine.tar.gz
+        Start-Process nomachine.exe -ArgumentList "/S" -Wait
 
-    - name: Extract NoMachine
+    - name: Start NoMachine Service
       run: |
-        cd /tmp
-        tar -xzf nomachine.tar.gz
-        ls -d nomachine*
+        net start nxserver
 
-    - name: Install NoMachine (CORRECT WAY)
+    - name: Download Cloudflared
       run: |
-        cd /tmp
-        NXDIR=$(find . -maxdepth 1 -type d -name "nomachine*" | head -n 1)
-        echo "NXDIR=$NXDIR"
-        cd "$NXDIR"
-        sudo chmod +x install.sh
-        sudo ./install.sh
+        curl -L -o cloudflared.exe https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
 
-    - name: Start NoMachine service
+    - name: Start Tunnel
       run: |
-        sudo /etc/NX/nxserver --start
-        sudo /etc/NX/nxserver --status
-
-    - name: Install Tailscale
-      run: |
-        curl -fsSL https://tailscale.com/install.sh | sh
-
-    - name: Start Tailscale
-      run: |
-        sudo tailscaled &
-        sleep 5
-        sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }}
-
-    - name: Show connection info
-      run: |
-        echo "=============================="
-        echo "NoMachine PORT: 4000"
-        echo "USER: runner"
-        echo "Tailscale IP:"
-        tailscale ip -4
-        echo "=============================="
-        sleep infinity
+        ./cloudflared.exe tunnel --url tcp://localhost:4000
