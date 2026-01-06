@@ -9,25 +9,26 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Update
+    - name: Install Desktop
       run: |
         sudo apt update
-        sudo apt install -y xfce4 xfce4-goodies curl snapd
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y xfce4 xfce4-goodies dbus-x11
 
-    - name: Install NoMachine (snap)
+    - name: Download NoMachine (TAR.GZ)
       run: |
-        sudo snap install nomachine --classic
+        curl -L -A "Mozilla/5.0" \
+        https://web9001.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_x86_64.tar.gz \
+        -o nomachine.tar.gz
 
-    - name: Create user
+    - name: Install NoMachine
       run: |
-        sudo useradd -m user
-        echo "user:user" | sudo chpasswd
-        sudo usermod -aG sudo user
+        tar -xzf nomachine.tar.gz
+        cd nomachine*
+        sudo ./nxserver --install
 
-    - name: Desktop session
+    - name: Start NoMachine
       run: |
-        echo "exec startxfce4 &" | sudo tee /home/user/.xsession
-        sudo chown user:user /home/user/.xsession
+        sudo /etc/NX/nxserver --start
 
     - name: Install Tailscale
       run: |
@@ -39,10 +40,9 @@ jobs:
         sleep 5
         sudo tailscale up --authkey=${{ secrets.TAILSCALE_AUTHKEY }}
 
-    - name: Info
+    - name: Show connection info
       run: |
-        echo "USER: user"
-        echo "PASS: user"
-        echo "PORT: 4000"
+        echo "NoMachine Port: 4000"
+        echo "IP:"
         tailscale ip -4
         sleep infinity
