@@ -1,0 +1,39 @@
+name: macOS Tailscale VNC
+
+on:
+  workflow_dispatch:
+
+jobs:
+  macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Install Tailscale
+        run: |
+          brew install tailscale
+          sudo tailscaled install-system-daemon
+
+      - name: Start Tailscale
+        run: |
+          sudo tailscale up \
+            --authkey ${{ secrets.TAILSCALE_AUTHKEY }} \
+            --hostname github-macos
+
+      - name: Enable Screen Sharing (VNC)
+        run: |
+          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
+          -activate -configure -access -on \
+          -restart -agent -privs -all
+
+      - name: Create VNC User
+        run: |
+          sudo sysadminctl -addUser vncuser -password 123456
+          sudo dseditgroup -o edit -a vncuser -t user admin
+
+      - name: Show Tailscale IP
+        run: |
+          echo "Tailscale IP:"
+          tailscale ip -4
+
+      - name: Keep Alive (6 saat)
+        run: sleep 21600
