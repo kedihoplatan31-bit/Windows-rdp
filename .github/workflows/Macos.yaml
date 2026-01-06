@@ -25,7 +25,8 @@ jobs:
 
       - name: Enable NoMachine
         run: |
-          sudo /Applications/NoMachine.app/Contents/MacOS/nxserver --start
+          sudo xattr -dr com.apple.quarantine /Applications/NoMachine.app
+          sudo /Applications/NoMachine.app/Contents/MacOS/nxserver.bin --start
 
       - name: Create User
         run: |
