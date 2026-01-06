@@ -13,12 +13,12 @@ jobs:
       run: |
         sudo apt update
 
-    - name: Install Desktop (XFCE)
+    - name: Install desktop (XFCE)
       run: |
         sudo DEBIAN_FRONTEND=noninteractive apt install -y \
           xfce4 xfce4-goodies dbus-x11 x11-xserver-utils
 
-    - name: Download NoMachine (TAR.GZ)
+    - name: Download NoMachine TAR.GZ
       run: |
         curl -L -A "Mozilla/5.0" \
         https://web9001.nomachine.com/download/9.3/Linux/nomachine_9.3.7_1_x86_64.tar.gz \
@@ -30,15 +30,16 @@ jobs:
         tar -xzf nomachine.tar.gz
         ls -d nomachine*
 
-    - name: Install NoMachine
+    - name: Install NoMachine (CORRECT WAY)
       run: |
         cd /tmp
         NXDIR=$(find . -maxdepth 1 -type d -name "nomachine*" | head -n 1)
-        echo "Installing from $NXDIR"
+        echo "NXDIR=$NXDIR"
         cd "$NXDIR"
-        sudo ./nxserver --install
+        sudo chmod +x install.sh
+        sudo ./install.sh
 
-    - name: Start NoMachine
+    - name: Start NoMachine service
       run: |
         sudo /etc/NX/nxserver --start
         sudo /etc/NX/nxserver --status
@@ -56,9 +57,9 @@ jobs:
     - name: Show connection info
       run: |
         echo "=============================="
-        echo "NoMachine Port: 4000"
+        echo "NoMachine PORT: 4000"
+        echo "USER: runner"
         echo "Tailscale IP:"
         tailscale ip -4
-        echo "User: runner"
         echo "=============================="
         sleep infinity
