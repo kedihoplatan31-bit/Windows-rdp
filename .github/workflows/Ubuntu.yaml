@@ -1,45 +1,40 @@
-name: Ubuntu X2Go Tailscale
+name: X2Go Ubuntu Desktop
 
 on:
   workflow_dispatch:
 
 jobs:
-  ubuntu:
-    runs-on: ubuntu-latest
+  desktop:
+    runs-on: ubuntu-22.04
 
     steps:
-      - name: Update system
+      - name: Install desktop + x2go
         run: |
           sudo apt update
-
-      - name: Install desktop (XFCE)
-        run: |
-          sudo apt install -y xfce4 xfce4-goodies dbus-x11
-
-      - name: Install X2Go Server
-        run: |
-          sudo apt install -y x2goserver x2goserver-xsession
+          sudo apt install -y xfce4 xfce4-goodies x2goserver x2goserver-xsession openssh-server
 
       - name: Create user
         run: |
-          sudo useradd -m x2gouser
+          if ! id x2gouser >/dev/null 2>&1; then
+            sudo useradd -m x2gouser
+          fi
           echo "x2gouser:123456" | sudo chpasswd
           sudo usermod -aG sudo x2gouser
 
-      - name: Install Tailscale
+      - name: Enable SSH
+        run: |
+          sudo systemctl enable ssh
+          sudo systemctl start ssh
+
+      - name: Setup Tailscale
         run: |
           curl -fsSL https://tailscale.com/install.sh | sh
+          sudo tailscale up --authkey ${{ secrets.TS_KEY }} --ssh
 
-      - name: Start Tailscale
+      - name: Show connection info
         run: |
-          sudo tailscale up \
-            --authkey=${{ secrets.TAILSCALE_AUTHKEY }} \
-            --hostname=github-ubuntu
-
-      - name: Show Tailscale IP
-        run: |
-          echo "Tailscale IP:"
+          echo "===== CONNECT INFO ====="
           tailscale ip -4
-
-      - name: Keep alive (6 hours)
-        run: sleep 21600
+          echo "User: x2gouser"
+          echo "Pass: 123456"
+          echo "Session: XFCE"
